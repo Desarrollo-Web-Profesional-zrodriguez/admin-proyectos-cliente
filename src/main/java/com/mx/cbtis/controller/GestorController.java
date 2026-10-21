@@ -271,10 +271,14 @@ public class GestorController {
 	}
 
 	@PostMapping("/verificarTarea")
-	public ResponseEntity<Integer> verificarTarea(@RequestBody Tareas paramName) {
-		String urlservicebd = "http://localhost:8081/addTareas";
-		ResponseEntity<Integer> response = template.postForEntity(urlservicebd, paramName, Integer.class);
-		return response;
+	public ResponseEntity<Object> verificarTarea(@RequestBody Tareas paramName) {
+		try {
+			String urlservicebd = "http://localhost:8081/addTareas";
+			ResponseEntity<Integer> response = template.postForEntity(urlservicebd, paramName, Integer.class);
+			return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+		} catch (HttpClientErrorException e) {
+			return ResponseEntity.status(e.getStatusCode()).build();
+		}
 	}
 
 	@PostMapping("/cambiosTareas")
