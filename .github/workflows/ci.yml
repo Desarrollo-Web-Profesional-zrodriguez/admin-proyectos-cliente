@@ -50,17 +50,20 @@ jobs:
             src pom.xml Dockerfile || true
 
       - name: 5. Analisis de Calidad y Cobertura en SonarCloud
-        if: ${{ secrets.SONAR_TOKEN != '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_ORG: ${{ vars.SONAR_ORGANIZATION || 'desarrollo-web-profesional-zrodriguez' }}
           SONAR_KEY: ${{ vars.SONAR_PROJECT_KEY || 'Desarrollo-Web-Profesional-zrodriguez_admin-proyectos-cliente' }}
         run: |
-          ./mvnw sonar:sonar -B \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization="${SONAR_ORG}" \
-            -Dsonar.projectKey="${SONAR_KEY}" \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          if [ -n "${SONAR_TOKEN}" ]; then
+            ./mvnw sonar:sonar -B \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.organization="${SONAR_ORG}" \
+              -Dsonar.projectKey="${SONAR_KEY}" \
+              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          else
+            echo "SONAR_TOKEN no configurado en GitHub Secrets; omitiendo paso de SonarCloud."
+          fi
 
       - name: 6. Validar construccion de imagen Docker (multi-stage)
         run: docker build -t admin-proyectos/cliente-web:ci .
