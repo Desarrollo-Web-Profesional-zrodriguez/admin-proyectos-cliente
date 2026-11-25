@@ -9,9 +9,9 @@ $(document).ready(function() {
 	var imagen = document.getElementById("imagenUsuario");
 	imagen.style.backgroundColor = usuario.imagen_usuario;
 	var inicial = usuario.nombre[0];
-	document.getElementById("Nombre").innerHTML = usuario.nombre;
-	document.getElementById("Email").innerHTML = usuario.correo_electronico;
-	document.getElementById("inicial").innerHTML = inicial;
+	document.getElementById("Nombre").textContent = usuario.nombre;
+	document.getElementById("Email").textContent = usuario.correo_electronico;
+	document.getElementById("inicial").textContent = inicial;
 	
 	var urlParams = new URLSearchParams(window.location.search);
 	var id = urlParams.get('id_proyecto');
@@ -421,14 +421,14 @@ function guardarComentario(){
 	}
 	
 	var idTareaVal = $('#id_tarea').val();
-	if(!idTareaVal || idTareaVal === "" || isNaN(idTareaVal)){
+	if(!idTareaVal || idTareaVal === "" || Number.isNaN(Number(idTareaVal))){
 		idTareaVal = idTareaActual;
 	}
 	if(!idTareaVal){
 		alert("No se ha seleccionado una tarea válida.");
 		return;
 	}
-	idTareaVal = parseInt(idTareaVal, 10);
+	idTareaVal = Number.parseInt(idTareaVal, 10);
 	
 	$.ajax({
             url: '/saveComentario',
@@ -444,7 +444,7 @@ function guardarComentario(){
                 console.log('Comentario guardado exitosamente, respuesta:', response);
                                 // Mitigacion CWE-601 (Open Redirect): validacion estricta de entero sobre ruta interna fija
                 var idInput = document.getElementById("IdProyectoURL").value;
-                var idProyectoSeguro = parseInt(idInput, 10);
+                var idProyectoSeguro = Number.parseInt(idInput, 10);
                 if (Number.isInteger(idProyectoSeguro) && idProyectoSeguro > 0) {
                     window.location.assign('/proyecto?id_proyecto=' + encodeURIComponent(idProyectoSeguro));
                 } else {
@@ -468,10 +468,10 @@ function llenarBarraLateral(idProyecto){
 			console.log(data);
 			
 			var nombre = document.getElementById("offcanvasScrollingLabel");
-			nombre.innerHTML = data.nombre;
+			nombre.textContent = data.nombre;
 			
 			var descripcion = document.getElementById("despliegueDescripcion");
-			descripcion.innerHTML = data.descripcion;
+			descripcion.textContent = data.descripcion;
 		
 		},
 		
