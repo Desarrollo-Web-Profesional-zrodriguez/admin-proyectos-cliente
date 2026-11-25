@@ -1,0 +1,77 @@
+name: CI/CD Cloud - Frontend (Java 21, JaCoCo, Semgrep, SonarCloud)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-test-security:
+    name: Build, Pruebas (50), JaCoCo, Semgrep y SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout codigo fuente (con historial completo para SonarCloud)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 2. Configurar JDK 21 (Temurin) y cache de Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: 3. Compilar, ejecutar pruebas unitarias (50) y generar reporte JaCoCo 0.8.12
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify jacoco:report -B
+
+      - name: 4. Escaneo SAST con Semgrep (excluyendo target/ y librerias minificadas)
+        run: |
+          mkdir -p reports
+          docker run --rm \
+            -v "${{ github.workspace }}:/src" \
+            -w /src \
+            semgrep/semgrep:latest \
+            semgrep scan \
+            --config=auto \
+            --exclude='target' \
+            --exclude='*.class' \
+            --exclude='*.jar' \
+            --exclude='*.min.js' \
+            --exclude='bootstrap*' \
+            --exclude='jquery*' \
+            --json \
+            --output=reports/semgrep-frontend.json \
+            src pom.xml Dockerfile || true
+
+      - name: 5. Analisis de Calidad y Cobertura en SonarCloud
+        if: ${{ secrets.SONAR_TOKEN != '' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORG: ${{ vars.SONAR_ORGANIZATION || 'desarrollo-web-profesional-zrodriguez' }}
+          SONAR_KEY: ${{ vars.SONAR_PROJECT_KEY || 'Desarrollo-Web-Profesional-zrodriguez_admin-proyectos-cliente' }}
+        run: |
+          ./mvnw sonar:sonar -B \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization="${SONAR_ORG}" \
+            -Dsonar.projectKey="${SONAR_KEY}" \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
+      - name: 6. Validar construccion de imagen Docker (multi-stage)
+        run: docker build -t admin-proyectos/cliente-web:ci .
+
+      - name: 7. Archivar artefactos (JaCoCo, Surefire y Semgrep)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-ci-frontend
+          path: |
+            target/site/jacoco/
+            target/surefire-reports/
+            reports/semgrep-frontend.json
+          retention-days: 30
