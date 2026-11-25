@@ -26,9 +26,7 @@ jobs:
           cache: 'maven'
 
       - name: 3. Compilar, ejecutar pruebas unitarias (50) y generar reporte JaCoCo 0.8.12
-        run: |
-          chmod +x mvnw
-          ./mvnw clean verify jacoco:report -B
+        run: mvn clean verify jacoco:report -B
 
       - name: 4. Escaneo SAST con Semgrep (excluyendo target/ y librerias minificadas)
         run: |
@@ -56,7 +54,7 @@ jobs:
           SONAR_KEY: ${{ vars.SONAR_PROJECT_KEY || 'Desarrollo-Web-Profesional-zrodriguez_admin-proyectos-cliente' }}
         run: |
           if [ -n "${SONAR_TOKEN}" ]; then
-            ./mvnw sonar:sonar -B \
+            mvn sonar:sonar -B \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.organization="${SONAR_ORG}" \
               -Dsonar.projectKey="${SONAR_KEY}" \
