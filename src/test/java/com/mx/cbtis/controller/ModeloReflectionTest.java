@@ -5,41 +5,34 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.RegexPatternTypeFilter;
+
+import com.mx.cbtis.modelo.Asignaciones;
+import com.mx.cbtis.modelo.Comentarios;
+import com.mx.cbtis.modelo.Proyectos;
+import com.mx.cbtis.modelo.Tareas;
+import com.mx.cbtis.modelo.Usuario;
 
 /**
  * Prueba las clases del paquete com.mx.cbtis.modelo (constructores, setters,
- * getters, toString, hashCode y equals) sin depender de los nombres de los campos.
+ * getters, toString, hashCode y equals) mediante una lista blanca explícita de
+ * clases de dominio para evitar reflexión dinámica arbitraria (mitigación CWE-470).
  */
 class ModeloReflectionTest {
 
-    private static List<Class<?>> clasesDelModelo() throws Exception {
-        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false) {
-            @Override
-            protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
-                return true;
-            }
-        };
-        scanner.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*")));
-        List<Class<?>> clases = new ArrayList<Class<?>>();
-        for (BeanDefinition bd : scanner.findCandidateComponents("com.mx.cbtis.modelo")) {
-            Class<?> c = Class.forName(bd.getBeanClassName());
-            if (!c.isInterface() && !c.isEnum() && !c.isAnnotation() && !Modifier.isAbstract(c.getModifiers())) {
-                clases.add(c);
-            }
-        }
-        return clases;
+    private static List<Class<?>> clasesDelModelo() {
+        return Arrays.<Class<?>>asList(
+                Asignaciones.class,
+                Comentarios.class,
+                Proyectos.class,
+                Tareas.class,
+                Usuario.class
+        );
     }
 
     private static Object valor(Class<?> t) {

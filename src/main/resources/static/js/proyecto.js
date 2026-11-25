@@ -442,12 +442,14 @@ function guardarComentario(){
             type: 'POST',
             success: function(response) {
                 console.log('Comentario guardado exitosamente, respuesta:', response);
-                var id = document.getElementById("IdProyectoURL").value;
-                if(!id){
-                    id = new URLSearchParams(window.location.search).get('id_proyecto');
+                                // Mitigacion CWE-601 (Open Redirect): validacion estricta de entero sobre ruta interna fija
+                var idInput = document.getElementById("IdProyectoURL").value;
+                var idProyectoSeguro = parseInt(idInput, 10);
+                if (Number.isInteger(idProyectoSeguro) && idProyectoSeguro > 0) {
+                    window.location.assign('/proyecto?id_proyecto=' + encodeURIComponent(idProyectoSeguro));
+                } else {
+                    window.location.reload();
                 }
-                var url = `proyecto?id_proyecto=${id}`;
-	            window.location.href = url;
             },
             error: function(error) {
                 console.error('Error al guardar el comentario:', error);
